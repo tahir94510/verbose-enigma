@@ -1,7 +1,25 @@
 # verbose-enigma
 
-Roma arenası temalı, kuş bakışı, 1v1 komutan stratejisi (çalışma adı belirlenmedi). Motor: Godot 4.
+Roma arenası temalı, kuş bakışı, 1v1 komutan stratejisi (çalışma adı belirlenmedi). Motor: Godot 4.3 (GDScript).
 
-- Tasarım: [`docs/`](docs/) — kararlar `[KARAR]`, öneriler `[ÖNERİ]`, ayarlanacak sayılar `[TASLAK]`, bekleyenler `[AÇIK]`.
-- Eleştirel inceleme ve açık sorular: [`docs/09-acik-sorular.md`](docs/09-acik-sorular.md)
-- Oyun: `game/` (Godot projesi), denge araçları: `tools/`
+- Tasarım: [`docs/`](docs/) — `[KARAR]` onaylı, `[ÖNERİ]` önerildi, `[TASLAK]` test edilecek sayı, `[AÇIK]` bekleyen.
+- Eleştirel inceleme ve ölçümler: [`docs/09-acik-sorular.md`](docs/09-acik-sorular.md)
+
+## Dikey dilim (oynanabilir)
+`game/` klasörünü Godot 4.3 ile aç ve çalıştır. İki gladyatör + zorluk seç.
+- Sol tık: grup/specula seç · Sağ tık sürükle ya da yön tuşları: kamera · Minimap'e tıkla/sürükle
+- Q/W/E duruş (Saldırgan/Savunmacı/Pusu) · D iyileş · F Hypogeum (sonra çıkış yapısına tıkla) · B geri çekil
+- Plan modu: emirler sıraya girer (en çok 4) · Space: gladyatöre git · P duraklat · +/- hız
+- Emirler gladyatör tarafından kurye gibi iletilir (menzile girince uygulanır); gladyatör doğrudan sürülmez.
+- Görseller bilinçli yer tutucu geometrik ikonlardır.
+
+## Yapı
+- `game/sim/` deterministik simülasyon (çizimden bağımsız) · `game/ai/` rakip komutan (aynı komut API'si)
+- `game/data/` tüm stat/item/ekonomi sayıları · `game/view/` çizim ve arayüz
+- `game/tests/run_tests.gd` testler · `game/tools/balance.gd` denge simülatörü
+
+## Komutlar
+```
+godot --headless --path game -s tests/run_tests.gd        # testler
+godot --headless --path game -s tools/balance.gd -- 20 0.5 # 20 AI-vs-AI maç, zorluk 0.5
+```

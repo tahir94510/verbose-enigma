@@ -1,0 +1,297 @@
+{
+ "parma": {
+  "name": "Parma",
+  "line": "lorica",
+  "tier": "base",
+  "total": 300,
+  "comps": [],
+  "fx": {
+   "armor": 0.3
+  }
+ },
+ "galea": {
+  "name": "Galea",
+  "line": "lorica",
+  "tier": "base",
+  "total": 340,
+  "comps": [],
+  "fx": {
+   "hp": 0.4,
+   "armor": 0.1
+  }
+ },
+ "scutum": {
+  "name": "Scutum",
+  "line": "lorica",
+  "tier": "epic",
+  "total": 900,
+  "comps": [
+   "parma"
+  ],
+  "fx": {
+   "armor": 0.55,
+   "hp": 0.2
+  }
+ },
+ "manica": {
+  "name": "Manica",
+  "line": "lorica",
+  "tier": "epic",
+  "total": 900,
+  "comps": [
+   "galea"
+  ],
+  "fx": {
+   "hp": 0.45,
+   "armor": 0.25
+  }
+ },
+ "lorica_segmentata": {
+  "name": "Lorica Segmentata",
+  "line": "lorica",
+  "tier": "legend",
+  "total": 2300,
+  "comps": [
+   "scutum",
+   "manica"
+  ],
+  "fx": {
+   "armor": 0.7,
+   "hp": 0.5
+  }
+ },
+ "pugio": {
+  "name": "Pugio",
+  "line": "gladius",
+  "tier": "base",
+  "total": 300,
+  "comps": [],
+  "fx": {
+   "atk": 0.25
+  }
+ },
+ "funda": {
+  "name": "Funda",
+  "line": "gladius",
+  "tier": "base",
+  "total": 300,
+  "comps": [],
+  "fx": {
+   "aspd": 0.3
+  }
+ },
+ "spatha": {
+  "name": "Spatha",
+  "line": "gladius",
+  "tier": "epic",
+  "total": 900,
+  "comps": [
+   "pugio"
+  ],
+  "fx": {
+   "atk": 0.4,
+   "crit": 0.1
+  }
+ },
+ "plumbata": {
+  "name": "Plumbata",
+  "line": "gladius",
+  "tier": "epic",
+  "total": 900,
+  "comps": [
+   "funda"
+  ],
+  "fx": {
+   "aspd": 0.45,
+   "range": 0.15
+  }
+ },
+ "gladius_hispaniensis": {
+  "name": "Gladius Hispaniensis",
+  "line": "gladius",
+  "tier": "legend",
+  "total": 2300,
+  "comps": [
+   "spatha",
+   "plumbata"
+  ],
+  "fx": {
+   "atk": 0.6,
+   "aspd": 0.35
+  }
+ },
+ "caligae": {
+  "name": "Caligae",
+  "line": "caliga",
+  "tier": "base",
+  "total": 300,
+  "comps": [],
+  "fx": {
+   "ms": 0.15
+  }
+ },
+ "lampas": {
+  "name": "Lampas",
+  "line": "caliga",
+  "tier": "base",
+  "total": 300,
+  "comps": [],
+  "fx": {
+   "tunnel": 0.15
+  }
+ },
+ "cothurnus": {
+  "name": "Cothurnus",
+  "line": "caliga",
+  "tier": "epic",
+  "total": 900,
+  "comps": [
+   "caligae"
+  ],
+  "fx": {
+   "ms": 0.2
+  }
+ },
+ "lucerna": {
+  "name": "Lucerna",
+  "line": "caliga",
+  "tier": "epic",
+  "total": 900,
+  "comps": [
+   "lampas"
+  ],
+  "fx": {
+   "tunnel": 0.25,
+   "ms": 0.1
+  }
+ },
+ "talaria": {
+  "name": "Talaria",
+  "line": "caliga",
+  "tier": "legend",
+  "total": 2300,
+  "comps": [
+   "cothurnus",
+   "lucerna"
+  ],
+  "fx": {
+   "ms": 0.3
+  }
+ },
+ "hordeum": {
+  "name": "Hordeum",
+  "line": "medicus",
+  "tier": "base",
+  "total": 300,
+  "comps": [],
+  "fx": {
+   "hp": 0.5
+  }
+ },
+ "unguentum": {
+  "name": "Unguentum",
+  "line": "medicus",
+  "tier": "base",
+  "total": 300,
+  "comps": [],
+  "fx": {
+   "regen": 0.5
+  }
+ },
+ "cataplasma": {
+  "name": "Cataplasma",
+  "line": "medicus",
+  "tier": "epic",
+  "total": 900,
+  "comps": [
+   "hordeum"
+  ],
+  "fx": {
+   "hp": 0.7,
+   "heal": 0.25
+  }
+ },
+ "acetum": {
+  "name": "Acetum",
+  "line": "medicus",
+  "tier": "epic",
+  "total": 900,
+  "comps": [
+   "unguentum"
+  ],
+  "fx": {
+   "regen": 0.8
+  }
+ },
+ "baculum": {
+  "name": "Baculum Aesculapii",
+  "line": "medicus",
+  "tier": "legend",
+  "total": 2300,
+  "comps": [
+   "cataplasma",
+   "acetum"
+  ],
+  "fx": {
+   "hp": 1.0,
+   "regen": 1.0
+  }
+ },
+ "vexillum": {
+  "name": "Vexillum",
+  "line": "signum",
+  "tier": "base",
+  "total": 300,
+  "comps": [],
+  "fx": {
+   "cmd_range": 0.25
+  }
+ },
+ "tessera": {
+  "name": "Tessera",
+  "line": "signum",
+  "tier": "base",
+  "total": 350,
+  "comps": [],
+  "fx": {
+   "plan_steps": 1
+  }
+ },
+ "cornu": {
+  "name": "Cornu",
+  "line": "signum",
+  "tier": "epic",
+  "total": 900,
+  "comps": [
+   "vexillum"
+  ],
+  "fx": {
+   "cmd_range": 0.2
+  }
+ },
+ "sigillum": {
+  "name": "Sigillum",
+  "line": "signum",
+  "tier": "epic",
+  "total": 900,
+  "comps": [
+   "tessera"
+  ],
+  "fx": {
+   "rule_slots": 1
+  }
+ },
+ "aquila": {
+  "name": "Aquila",
+  "line": "signum",
+  "tier": "legend",
+  "total": 2300,
+  "comps": [
+   "cornu",
+   "sigillum"
+  ],
+  "fx": {
+   "group_buff": 0.2
+  }
+ }
+}

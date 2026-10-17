@@ -1,0 +1,38 @@
+{
+  "dt": 0.1,
+  "world": {"w": 2400, "h": 1600},
+  "lanes": [
+    {"name": "Üst yol", "pts": [[2100,1400],[2100,200],[300,200]]},
+    {"name": "Alt yol", "pts": [[2100,1400],[300,1400],[300,200]]}
+  ],
+  "tower_s": {"inner": 450, "outer": 900},
+  "cover": [[2100,800,130],[1000,200,130],[1000,1400,130],[300,800,130]],
+  "economy": {
+    "start_gold": 600, "passive_from": 40.0, "passive_every": 10.0, "passive_amount": 30,
+    "far_kill_ratio": 0.4, "glad_kill": 300, "glad_kill_floor": 0.4, "glad_kill_decay": 0.15,
+    "first_tower_bonus": 200
+  },
+  "wave": {"every": 30.0, "first": 5.0, "aux": 3, "sag": 2, "balista_every": 3, "extra_aux_every": 8, "scale_per_min": 0.06},
+  "respawn": {"base": 8.0, "per_sec": 0.03, "reserve_delay": 3.0, "swap_cd": 4.0},
+  "glad_scale": {"hp": 1000, "atk": 60, "aspd": 1.0, "armor": 30, "ms": 100, "range": 60},
+  "glad_sight": 400, "glad_radius": 18,
+  "ludus": {"hp": 5000, "atk": 120, "armor": 60, "heal_pct": 0.08, "heal_radius": 220, "regen_pct": 0.002, "sight": 500, "range": 260, "period": 1.2, "radius": 70},
+  "tower": {
+    "outer": {"hp": 2500, "atk": 70, "armor": 40, "gold": 250},
+    "inner": {"hp": 3000, "atk": 90, "armor": 50, "gold": 300},
+    "range": 230, "period": 1.2, "sight": 500, "radius": 40,
+    "ramp_step": 0.5, "ramp_max": 3, "plating_mult": 0.4, "plating_radius": 420
+  },
+  "units": {
+    "aux": {"hp": 300, "atk": 14, "armor": 15, "aspd": 1.0, "ms": 55, "range": 30, "sight": 220, "gold": 20, "ranged": false},
+    "sag": {"hp": 170, "atk": 20, "armor": 5,  "aspd": 1.0, "ms": 55, "range": 150, "sight": 220, "gold": 16, "ranged": true},
+    "bal": {"hp": 700, "atk": 45, "armor": 25, "aspd": 0.7, "ms": 45, "range": 190, "sight": 240, "gold": 45, "ranged": true}
+  },
+  "unit_aggro": 170,
+  "cmd_range": 350,
+  "plan_steps": 4, "rule_slots": 2,
+  "heal": {"pct": 0.25, "cd": 60.0},
+  "hypogeum": {"ratio": 0.5, "entry": 110, "block_after_hit": 3.0},
+  "favor": {"per_dmg": 60.0, "kill": 20.0, "tower": 25.0},
+  "stance": {"testudo_ranged_mult": 0.75, "testudo_ms": 0.85}
+}

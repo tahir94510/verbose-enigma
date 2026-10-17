@@ -1,0 +1,12 @@
+{
+  "murmillo":  {"name": "Murmillo",  "role": "tank",      "hp": 140, "atk": 85,  "aspd": 85,  "armor": 140, "ms": 80,  "range": 100, "crit": 0.05, "ranged": false,
+    "skill": {"name": "Kalkan Darbesi", "cd": 14}, "munus": {"name": "Tek Cephe"}},
+  "thraex":    {"name": "Thraex",    "role": "savaşçı",   "hp": 100, "atk": 105, "aspd": 120, "armor": 95,  "ms": 100, "range": 100, "crit": 0.20, "ranged": false,
+    "skill": {"name": "Yan Kesiş", "cd": 12}, "munus": {"name": "Griffon Atılışı"}},
+  "secutor":   {"name": "Secutor",   "role": "avcı",      "hp": 90,  "atk": 125, "aspd": 110, "armor": 110, "ms": 115, "range": 100, "crit": 0.15, "ranged": false,
+    "skill": {"name": "Kovalama", "cd": 16}, "munus": {"name": "Vulcan Ateşi"}},
+  "retiarius": {"name": "Retiarius", "role": "kontrol",   "hp": 85,  "atk": 80,  "aspd": 100, "armor": 70,  "ms": 115, "range": 140, "crit": 0.05, "ranged": false,
+    "skill": {"name": "Ağ Atışı", "cd": 12}, "munus": {"name": "Neptün'ün Gelgiti"}},
+  "veles":     {"name": "Veles",     "role": "nişancı",   "hp": 75,  "atk": 110, "aspd": 100, "armor": 60,  "ms": 105, "range": 260, "crit": 0.15, "ranged": true,
+    "skill": {"name": "Mızrak Salvosu", "cd": 10}, "munus": {"name": "Ağır Pilum"}}
+}

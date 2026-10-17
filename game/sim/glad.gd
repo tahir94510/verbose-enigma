@@ -329,6 +329,14 @@ static func _process_order(w, e, ts: Dictionary, lud, at_ludus: bool) -> bool:
 			e.g["intent"] = "emir iletiyor"
 			move_to(w, e, tw.pos)
 			return true
+		"camp":
+			var ce = w.camp_ent(int(o["camp"]))
+			if ce == null:
+				ts["orders"].pop_front()
+				return false
+			e.g["intent"] = "arena yaratığı"
+			_engage(w, e, ce, true)
+			return true
 		"retreat":
 			if at_ludus:
 				ts["orders"].pop_front()
@@ -412,7 +420,9 @@ static func _attack(w, e, tgt) -> void:
 	var gd: Dictionary = e.g
 	var aspd: float = e.aspd * e.status_val("weak_aspd", w.time, 1.0)
 	e.atk_cd = 1.0 / maxf(0.1, aspd)
-	var raw: float = e.atk
+	var raw: float = e.atk * e.status_val("atk_up", w.time, 1.0)
+	if gd["cls"] == "secutor" and gd["heat"] >= 50.0 and tgt.kind == "neutral":
+		tgt.status["burn"] = {"until": w.time + 3.0, "v": 1.0}
 	match gd["cls"]:
 		"secutor":
 			raw *= 1.0 + gd["heat"] * 0.003

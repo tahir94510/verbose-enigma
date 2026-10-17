@@ -3,7 +3,7 @@
 ## Harita **[KARAR/ÖNERİ]**
 - Tek, sabit harita; tam tepeden (kuş bakışı) 2D, öğeler ikonlarla. Ekran haritanın yaklaşık %50'sini gösterir; kaydırma/kamera. Ekran boyutundan bağımsız, tutarlı büyüklük. **[TASLAK]** ölçü.
 - Üsler iki karşıt köşede (çapraz yerleşim, estetik/mantık için); **iki yol**. Aradaki merkez bölge kulesiz nötr arena: mitolojik yaratıklar (ödül/buff), LoL ormanı rolü, tek rastgelelik katmanı.
-- Kenar boşluklarından iki köşeden çıkan **dev doğa varlıkları** en dış yapılara yönelir (AoE'deki Gaia benzeri doğa tehdidi). **[AÇIK]** hangi yaratıklar (Roma/Etrüsk mitolojisi araştırması).
+- Kenar boşluklarından iki köşeden çıkan **dev doğa varlıkları** en dış yapılara yönelir (AoE'deki Gaia benzeri doğa tehdidi). Ayrıntı ve kaynak notları: [10-yaratiklar.md](10-yaratiklar.md).
 - Örtü bölgeleri (harabe, selvi koruları, sütunlu alanlar): Pusu yalnızca burada çalışır.
 - Hat/yapı isimleri: yol adı + sıra (örn. Üst yol dış specula'sı); karakterli Latince adlar sonra **[AÇIK]**.
 

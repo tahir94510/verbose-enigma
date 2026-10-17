@@ -18,8 +18,16 @@ Roma arenası temalı, kuş bakışı, 1v1 komutan stratejisi (çalışma adı b
 - `game/data/` tüm stat/item/ekonomi sayıları · `game/view/` çizim ve arayüz
 - `game/tests/run_tests.gd` testler · `game/tools/balance.gd` denge simülatörü
 
+## Web sürümü
+```
+godot --headless --path game --export-release "Web" ../build/web/index.html   # export şablonları gerekir (4.3.stable)
+cd build/web && python3 -m http.server 8765
+```
+Tek iş parçacıklı web dışa aktarma (özel başlık gerektirmez).
+
 ## Komutlar
 ```
 godot --headless --path game -s tests/run_tests.gd        # testler
-godot --headless --path game -s tools/balance.gd -- 20 0.5 # 20 AI-vs-AI maç, zorluk 0.5
+godot --headless --path game -s tools/balance.gd -- 0 50 0.5   # 50 AI-vs-AI maç (başlangıç, sayı, zorluk0 [zorluk1])
+python3 game/tools/balance_report.py out.txt                    # sonuçları topla
 ```

@@ -7,6 +7,7 @@ const Glad = preload("res://sim/glad.gd")
 var cfg: Dictionary
 var gdefs: Dictionary
 var items: Dictionary
+var cre: Dictionary
 var dt: float = 0.1
 var time: float = 0.0
 var rng := RandomNumberGenerator.new()
@@ -27,11 +28,16 @@ var _next_passive: float = 0.0
 var wave_n: int = 0
 var stats: Dictionary = {"gold_income": [0.0, 0.0], "first_tower": -1}
 var cover: Array = []
+var camps: Array = []
+var nature_events: int = 0
+var _next_nature: float = 0.0
+var nature_warned: bool = false
 
 func _init(data: Dictionary, seed_: int, pairs: Array) -> void:
 	cfg = data["cfg"]
 	gdefs = data["glads"]
 	items = data["items"]
+	cre = data["creatures"]
 	dt = float(cfg["dt"])
 	rng.seed = seed_
 	for l in cfg["lanes"]:
@@ -49,6 +55,9 @@ func _init(data: Dictionary, seed_: int, pairs: Array) -> void:
 	_next_passive = float(cfg["economy"]["passive_from"])
 	for t in 2:
 		_setup_team(t, pairs[t])
+	for c in cre["camps"]:
+		camps.append({"def": c["def"], "pos": Vector2(c["pos"][0], c["pos"][1]), "ent": -1, "next": float(c["first"])})
+	_next_nature = float(cre["nature"]["first"])
 
 # ---------- kurulum ----------
 func _new_ent(kind: String, team: int, pos: Vector2) -> Ent:
@@ -174,7 +183,7 @@ func near(p: Vector2, r: float) -> Array:
 	return out
 
 func is_visible(team: int, e: Ent) -> bool:
-	if e.team == team or not e.alive:
+	if e.team == team or not e.alive or e.t.get("always_vis", false):
 		return true
 	var cache: Dictionary = _vis_cache[team]
 	if cache.has(e.id):
@@ -198,6 +207,7 @@ func step() -> void:
 	_rebuild_grid()
 	_economy()
 	_waves()
+	_neutral_tick()
 	for t in 2:
 		_team_update(t)
 	for e in ents.duplicate():
@@ -208,6 +218,7 @@ func step() -> void:
 			"glad": Glad.update(self, e)
 			"aux", "sag", "bal": _unit_update(e)
 			"tower", "ludus": _structure_update(e)
+			"neutral": _neutral_update(e)
 	_update_seen()
 	for t in 2:
 		if not by_id[teams[t]["ludus"]].alive:
@@ -484,7 +495,7 @@ func deal(src: Ent, dst: Ent, raw: float, tag: String) -> float:
 		dmg *= dst.status_val("untouchable", time, 1.0)
 		if src != null and src.ranged and dst.lane >= 0 and teams[dst.team]["stance"][dst.lane] == "def":
 			dmg *= float(cfg["stance"]["testudo_ranged_mult"])
-	if dst.kind == "tower" and src != null and dst.t["outer"]:
+	if dst.kind == "tower" and src != null and src.team < 2 and dst.t["outer"]:
 		var support: bool = false
 		for o in near(dst.pos, float(cfg["tower"]["plating_radius"])):
 			if o.team == src.team and o.kind != "glad" and not o.is_structure():
@@ -517,10 +528,14 @@ func _kill(dst: Ent, src: Ent) -> void:
 	dst.alive = false
 	dst.hp = 0.0
 	dst.target = -1
-	var killer_team: int = 1 - dst.team
-	var kts: Dictionary = teams[killer_team]
 	if record_events:
 		events.append({"t": "die", "b": dst.id, "kind": dst.kind})
+	if dst.team == 2:
+		_neutral_killed(dst, src)
+		return
+	var killer_team: int = 1 - dst.team
+	var kts: Dictionary = teams[killer_team]
+	var neutral_src: bool = src != null and src.team == 2
 	match dst.kind:
 		"glad":
 			var gd: Dictionary = dst.g
@@ -530,10 +545,11 @@ func _kill(dst: Ent, src: Ent) -> void:
 			var bounty: float = float(ec["glad_kill"]) * maxf(float(ec["glad_kill_floor"]), 1.0 - float(ec["glad_kill_decay"]) * gd["deaths_row"])
 			gd["deaths_row"] += 1
 			gd["respawn_at"] = time + float(cfg["respawn"]["base"]) + float(cfg["respawn"]["per_sec"]) * time
-			add_gold(killer_team, bounty)
-			kts["kills"] += 1
+			if not neutral_src:
+				add_gold(killer_team, bounty)
+				kts["kills"] += 1
 			var kg: Ent = kts["glads"][kts["active"]]
-			if kg.alive:
+			if kg.alive and not neutral_src:
 				kg.g["kills"] += 1
 				kg.g["deaths_row"] = 0
 				Glad.add_favor(self, kg, float(cfg["favor"]["kill"]))
@@ -544,9 +560,10 @@ func _kill(dst: Ent, src: Ent) -> void:
 				kts["first_tower_taken"] = true
 				stats["first_tower"] = killer_team
 				tg += float(cfg["economy"]["first_tower_bonus"])
-			add_gold(killer_team, tg)
+			if not neutral_src:
+				add_gold(killer_team, tg)
 			var kg2: Ent = kts["glads"][kts["active"]]
-			if kg2.alive:
+			if kg2.alive and not neutral_src:
 				Glad.add_favor(self, kg2, float(cfg["favor"]["tower"]))
 		"ludus":
 			pass
@@ -556,7 +573,8 @@ func _kill(dst: Ent, src: Ent) -> void:
 			var kg3: Ent = kts["glads"][kts["active"]]
 			if kg3.alive and kg3.pos.distance_to(dst.pos) <= float(cfg["glad_sight"]):
 				full = true
-			add_gold(killer_team, float(u["gold"]) * (1.0 if full else float(cfg["economy"]["far_kill_ratio"])))
+			if not neutral_src:
+				add_gold(killer_team, float(u["gold"]) * (1.0 if full else float(cfg["economy"]["far_kill_ratio"])))
 
 func _update_seen() -> void:
 	for t in 2:
@@ -595,13 +613,13 @@ func issue(team: int, cmd: Dictionary) -> bool:
 		"munus":
 			ts["munus_fire"] = true
 			return true
-		"group", "tower", "retreat", "heal", "hypogeum":
+		"group", "tower", "retreat", "heal", "hypogeum", "camp":
 			if cmd.get("queue", false):
 				if ts["orders"].size() >= max_plan(team):
 					return false
 				ts["orders"].append(cmd)
 				return true
-			if ty == "group" or ty == "tower":
+			if ty == "group" or ty == "tower" or ty == "camp":
 				ts["orders"] = [cmd]
 				return true
 			if ty == "retreat":
@@ -654,3 +672,160 @@ func state_hash() -> int:
 		h = (h * 31 + int(e.pos.x * 10.0) + int(e.pos.y * 10.0) * 7 + int(e.hp)) & 0x7fffffff
 	h = (h * 31 + int(teams[0]["gold"]) + int(teams[1]["gold"]) * 3) & 0x7fffffff
 	return h
+
+# ---------- nötr yaratıklar ve Gigas ----------
+func _spawn_neutral(def_id: String, pos: Vector2, scale: float = 1.0) -> Ent:
+	var d: Dictionary = cre["defs"][def_id]
+	var e := _new_ent("neutral", 2, pos)
+	e.max_hp = float(d["hp"]) * scale; e.hp = e.max_hp
+	e.atk = float(d["atk"]) * scale; e.armor = float(d["armor"]); e.aspd = float(d["aspd"])
+	e.ms = float(d["ms"]); e.rng = float(d["range"]); e.sight = float(d["sight"]); e.radius = float(d["radius"])
+	e.label = String(d["name"])
+	e.t = {"def": def_id, "home": pos, "gigas": def_id == "gigas", "always_vis": def_id == "gigas", "goal": -1}
+	return e
+
+func camp_ent(i: int) -> Ent:
+	var id: int = camps[i]["ent"]
+	if id < 0:
+		return null
+	var e: Ent = by_id[id]
+	return e if e.alive else null
+
+func _neutral_tick() -> void:
+	for c in camps:
+		if c["ent"] < 0 and time >= c["next"]:
+			var e := _spawn_neutral(c["def"], c["pos"])
+			c["ent"] = e.id
+	var nc: Dictionary = cre["nature"]
+	if nature_events < int(nc["max_events"]):
+		if not nature_warned and time >= _next_nature - float(nc["warn"]):
+			nature_warned = true
+			if record_events:
+				events.append({"t": "gigas_warn"})
+		if time >= _next_nature:
+			_spawn_gigantes(1.0 + float(nc["scale_per_event"]) * nature_events)
+			nature_events += 1
+			_next_nature += float(nc["every"])
+			nature_warned = false
+
+func _spawn_gigantes(scale: float) -> void:
+	# Her köşe iki dev gönderir: biri kendi, biri rakip tarafın o yoldaki dış specula'sına. Simetrik, kurasız, herkese görünür.
+	for corner in cre["nature"]["corners"]:
+		var lane: int = int(corner[2])
+		for t in 2:
+			var goal: Ent = null
+			for tid in teams[t]["towers"]:
+				var tw: Ent = by_id[tid]
+				if tw.alive and tw.lane == lane and (goal == null or own_s(t, lane, tw.t["s"]) > own_s(t, lane, goal.t["s"])):
+					goal = tw   # o yoldaki en dıştaki ayakta specula
+			if goal == null:
+				continue
+			var g := _spawn_neutral("gigas", Vector2(corner[0], corner[1]), scale)
+			g.t["goal"] = goal.id
+	if record_events:
+		events.append({"t": "gigas_spawn"})
+
+func _neutral_update(e: Ent) -> void:
+	_tick_status(e)
+	if not e.alive or e.has_status("stun", time):
+		return
+	var d: Dictionary = cre["defs"][e.t["def"]]
+	if d.has("regen") and not e.status.has("bleed") and not e.status.has("burn"):
+		e.hp = minf(e.max_hp, e.hp + e.max_hp * float(d["regen"]) * dt)
+	if e.t["gigas"]:
+		_gigas_update(e, d)
+		return
+	var tgt: Ent = by_id.get(e.target, null)
+	var home: Vector2 = e.t["home"]
+	if tgt != null and (not tgt.alive or tgt.pos.distance_to(home) > float(d["leash"]) or (tgt.hidden and tgt.pos.distance_to(e.pos) > 120.0)):
+		tgt = null
+		e.target = -1
+	if tgt == null:
+		var best: Ent = null
+		var bd: float = INF
+		for o in near(e.pos, float(d["aggro"])):
+			if o.team < 2 and o.alive and not o.is_structure() and not (o.kind == "glad" and o.g["mode"] == "tunnel") and not (o.hidden and o.pos.distance_to(e.pos) > 120.0):
+				var dd: float = o.pos.distance_to(e.pos)
+				if dd < bd:
+					bd = dd
+					best = o
+		tgt = best
+		e.target = tgt.id if tgt != null else -1
+	if tgt == null:
+		if e.pos.distance_to(home) > 6.0:
+			_move_to(e, home)
+		elif not e.status.has("bleed") and not e.status.has("burn"):
+			e.hp = minf(e.max_hp, e.hp + e.max_hp * 0.08 * dt)
+		return
+	if e.pos.distance_to(tgt.pos) <= e.rng + tgt.radius:
+		e.facing = (tgt.pos - e.pos).normalized()
+		if e.atk_cd <= 0.0:
+			e.atk_cd = 1.0 / maxf(0.1, e.aspd)
+			e.last_attacked_at = time
+			deal(e, tgt, e.atk, "attack")
+	else:
+		_move_to(e, tgt.pos)
+
+func _gigas_update(e: Ent, d: Dictionary) -> void:
+	var goal: Ent = by_id.get(int(e.t["goal"]), null)
+	if goal == null or not goal.alive:
+		goal = null
+		var bd: float = INF
+		for o in ents:
+			if o.alive and o.kind == "tower":
+				var dd: float = o.pos.distance_to(e.pos)
+				if dd < bd:
+					bd = dd
+					goal = o
+		e.t["goal"] = goal.id if goal != null else -1
+	# menzildeki en yakın (yapı/birim/gladyatör) hedefe saldır, yoksa hedefe yürü
+	var tgt: Ent = null
+	var bd2: float = INF
+	for o in near(e.pos, e.rng + 40.0):
+		if o.team < 2 and o.alive and o.pos.distance_to(e.pos) <= e.rng + o.radius:
+			var dd2: float = o.pos.distance_to(e.pos)
+			if dd2 < bd2:
+				bd2 = dd2
+				tgt = o
+	if tgt != null:
+		e.facing = (tgt.pos - e.pos).normalized()
+		if e.atk_cd <= 0.0:
+			e.atk_cd = 1.0 / maxf(0.1, e.aspd)
+			e.last_attacked_at = time
+			deal(e, tgt, e.atk, "attack")
+			for o in near(tgt.pos, float(d["splash"])):
+				if o.team < 2 and o.alive and o.id != tgt.id and not o.is_structure():
+					deal(e, o, e.atk * float(d["splash_mult"]), "attack")
+	elif goal != null:
+		_move_to(e, goal.pos)
+
+func _neutral_killed(dst: Ent, src: Ent) -> void:
+	var d: Dictionary = cre["defs"][dst.t["def"]]
+	for c in camps:
+		if c["ent"] == dst.id:
+			c["ent"] = -1
+			c["next"] = time + float(_camp_def_respawn(c))
+	if src == null or src.team > 1:
+		return
+	var kt: int = src.team
+	var by_glad: bool = src.kind == "glad"
+	add_gold(kt, float(d["gold"]) * (1.0 if by_glad else 0.5))
+	if by_glad:
+		Glad.add_favor(self, src, float(d["favor"]))
+		var b = d.get("buff", null)
+		if b != null:
+			var until: float = time + float(b["secs"])
+			if b.has("atk_up"):
+				src.status["atk_up"] = {"until": until, "v": float(b["atk_up"])}
+			if b.has("armor_up"):
+				src.status["armor_up"] = {"until": until, "v": float(b["armor_up"])}
+			if b.has("heal"):
+				src.hp = minf(src.max_hp, src.hp + src.max_hp * float(b["heal"]))
+	if record_events:
+		events.append({"t": "neutral_kill", "team": kt, "def": dst.t["def"]})
+
+func _camp_def_respawn(c: Dictionary) -> float:
+	for cc in cre["camps"]:
+		if cc["def"] == c["def"] and Vector2(cc["pos"][0], cc["pos"][1]) == c["pos"]:
+			return float(cc["respawn"])
+	return 120.0

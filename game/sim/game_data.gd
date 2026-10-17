@@ -13,4 +13,5 @@ static func load_all() -> Dictionary:
 		"cfg": load_json("res://data/config.json"),
 		"glads": load_json("res://data/gladiators.json"),
 		"items": load_json("res://data/items.json"),
+		"creatures": load_json("res://data/creatures.json"),
 	}

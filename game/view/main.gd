@@ -48,7 +48,12 @@ var btns: Dictionary = {}
 var pick: Array = []
 var diff_val: float = 0.5
 var msg_t: float = 0.0
+var _rb: float = 0.0
+var _warned: bool = false
 var font: Font
+
+func _vp() -> Vector2:
+	return get_viewport_rect().size
 
 func _ready() -> void:
 	data = GameData.load_all()
@@ -62,12 +67,14 @@ func _show_menu() -> void:
 	if menu != null:
 		menu.queue_free()
 	pick = []
-	menu = PanelContainer.new()
-	menu.set_anchors_preset(Control.PRESET_CENTER)
-	menu.custom_minimum_size = Vector2(560, 360)
-	menu.position = Vector2(360, 160)
+	var holder := CenterContainer.new()
+	holder.set_anchors_preset(Control.PRESET_FULL_RECT)
+	var menu_panel := PanelContainer.new()
+	menu_panel.custom_minimum_size = Vector2(560, 360)
+	holder.add_child(menu_panel)
+	menu = holder
 	var vb := VBoxContainer.new()
-	menu.add_child(vb)
+	menu_panel.add_child(vb)
 	var t := Label.new()
 	t.text = "GLADYATÖR KOMUTANI — çalışma adı\nİki gladyatör seç, zorluğu seç"
 	vb.add_child(t)
@@ -125,7 +132,7 @@ func _start() -> void:
 	var g = w.teams[0]["glads"][0]
 	for i in 2:
 		w.teams[0]["plan"][i] = AIController.PLANS[pick[i]].duplicate()
-	cam = w.ludus(0).pos - Vector2(640, 360)
+	cam = w.ludus(0).pos - _vp() * 0.5
 	over_text = ""
 	menu.queue_free()
 	menu = null
@@ -146,13 +153,15 @@ func _build_hud() -> void:
 		c.queue_free()
 	btns.clear()
 	var top := PanelContainer.new()
-	top.position = Vector2(0, 0)
-	top.size = Vector2(1280, 40)
+	top.set_anchors_preset(Control.PRESET_TOP_WIDE)
 	lbl_top = Label.new()
 	top.add_child(lbl_top)
 	ui.add_child(top)
 	var right := PanelContainer.new()
-	right.position = Vector2(1020, 46)
+	right.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	right.offset_left = -260
+	right.offset_right = -10
+	right.offset_top = 46
 	right.custom_minimum_size = Vector2(250, 200)
 	lbl_info = Label.new()
 	lbl_info.autowrap_mode = TextServer.AUTOWRAP_WORD
@@ -165,12 +174,15 @@ func _build_hud() -> void:
 	plan.add_child(lbl_plan)
 	ui.add_child(plan)
 	lbl_msg = Label.new()
-	lbl_msg.position = Vector2(440, 320)
+	lbl_msg.set_anchors_preset(Control.PRESET_CENTER_TOP)
+	lbl_msg.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	lbl_msg.offset_top = 110
 	lbl_msg.add_theme_font_size_override("font_size", 22)
 	ui.add_child(lbl_msg)
 	var bottom := PanelContainer.new()
-	bottom.position = Vector2(220, 640)
-	bottom.size = Vector2(1060, 80)
+	bottom.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
+	bottom.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	bottom.offset_left = 220
 	var vb := VBoxContainer.new()
 	bottom.add_child(vb)
 	var r1 := HBoxContainer.new()
@@ -189,9 +201,12 @@ func _build_hud() -> void:
 	ui.add_child(bottom)
 	_build_shop()
 	minimap = Control.new()
-	minimap.position = Vector2(6, 560)
+	minimap.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
+	minimap.offset_left = 6
+	minimap.offset_top = -164
+	minimap.offset_right = 216
+	minimap.offset_bottom = -6
 	minimap.custom_minimum_size = Vector2(210, 154)
-	minimap.size = Vector2(210, 154)
 	minimap.draw.connect(_draw_minimap)
 	minimap.gui_input.connect(_minimap_input)
 	ui.add_child(minimap)
@@ -199,7 +214,9 @@ func _build_hud() -> void:
 
 func _build_shop() -> void:
 	shop_panel = PanelContainer.new()
-	shop_panel.position = Vector2(220, 140)
+	shop_panel.set_anchors_preset(Control.PRESET_CENTER)
+	shop_panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	shop_panel.grow_vertical = Control.GROW_DIRECTION_BOTH
 	shop_panel.visible = false
 	var vb := VBoxContainer.new()
 	shop_panel.add_child(vb)
@@ -259,6 +276,11 @@ func _rebuild_cmds() -> void:
 		cmd_box.add_child(_mk_btn("Akıllı (varsayılan)", func(): _cmd({"type": "tower", "tower": id, "val": "smart"})))
 	for c in [["Üst yol grubu", 0], ["Alt yol grubu", 1]]:
 		cmd_box.add_child(_mk_btn(c[0], func(): _select_lane(c[1])))
+	for i in w.camps.size():
+		var ce = w.camp_ent(i)
+		if ce != null and w.is_visible(player, ce):
+			var idx: int = i
+			cmd_box.add_child(_mk_btn("→ " + String(ce.label).split(" ")[0], func(): _cmd({"type": "camp", "camp": idx})))
 
 func _select_lane(l: int) -> void:
 	sel = {"type": "lane", "lane": l}
@@ -337,7 +359,7 @@ func _unhandled_input(ev: InputEvent) -> void:
 			KEY_MINUS, KEY_KP_SUBTRACT: speed = maxf(0.25, speed * 0.5)
 			KEY_SPACE:
 				var g = w.teams[player]["glads"][w.teams[player]["active"]]
-				cam = g.pos - Vector2(640, 360)
+				cam = g.pos - _vp() * 0.5
 			KEY_1: _select_lane(0)
 			KEY_2: _select_lane(1)
 			KEY_ESCAPE:
@@ -383,7 +405,7 @@ func _minimap_input(ev: InputEvent) -> void:
 	if (ev is InputEventMouseButton and ev.pressed and ev.button_index == MOUSE_BUTTON_LEFT) or (ev is InputEventMouseMotion and ev.button_mask & MOUSE_BUTTON_MASK_LEFT):
 		var wsz: Vector2 = Vector2(float(data["cfg"]["world"]["w"]), float(data["cfg"]["world"]["h"]))
 		var f: Vector2 = ev.position / minimap.size
-		cam = f * wsz - Vector2(640, 360)
+		cam = f * wsz - _vp() * 0.5
 
 # ---------- döngü ----------
 func _process(delta: float) -> void:
@@ -392,7 +414,7 @@ func _process(delta: float) -> void:
 	var mv := Vector2(Input.get_axis("ui_left", "ui_right"), Input.get_axis("ui_up", "ui_down"))
 	cam += mv * 900.0 * delta
 	var wsz := Vector2(float(data["cfg"]["world"]["w"]), float(data["cfg"]["world"]["h"]))
-	cam = cam.clamp(Vector2(-200, -100), wsz - Vector2(1080, 620))
+	cam = cam.clamp(Vector2(-200, -100), wsz - _vp() + Vector2(200, 100))
 	if not paused and w.winner < 0:
 		acc += delta * speed
 		var n: int = 0
@@ -405,6 +427,15 @@ func _process(delta: float) -> void:
 			acc = 0.0
 	if w.winner >= 0 and over_text == "":
 		over_text = "ZAFER — rakip Ludus yıkıldı" if w.winner == player else "YENİLGİ — Ludus'un yıkıldı"
+	_rb -= delta
+	if _rb <= 0.0:
+		_rb = 2.0
+		_rebuild_cmds()
+	if w.nature_warned and not _warned:
+		_warned = true
+		_flash("CORNU! Köşelerden Gigas geliyor")
+	if not w.nature_warned:
+		_warned = false
 	fog_t -= delta
 	if fog_t <= 0.0:
 		fog_t = 0.2
@@ -474,12 +505,13 @@ func _order_text(o: Dictionary) -> String:
 		"retreat": return "Geri çekil"
 		"heal": return "İyileş"
 		"hypogeum": return "Hypogeum"
+		"camp": return "Yaratık"
 	return o["type"]
 
 # ---------- çizim ----------
 func _draw() -> void:
 	if w == null:
-		draw_rect(Rect2(0, 0, 1280, 720), COL_BG)
+		draw_rect(Rect2(Vector2.ZERO, _vp()), COL_BG)
 		return
 	draw_set_transform(-cam)
 	var wsz := Vector2(float(data["cfg"]["world"]["w"]), float(data["cfg"]["world"]["h"]))
@@ -552,6 +584,10 @@ func _draw_units() -> void:
 	for e in w.ents:
 		if e.is_structure() or not e.alive:
 			continue
+		if e.kind == "neutral":
+			if w.is_visible(player, e):
+				_draw_neutral(e)
+			continue
 		if e.kind == "glad" and (e.g["mode"] == "tunnel" or e.g["mode"] == "bench"):
 			continue
 		if e.team != player and not w.is_visible(player, e):
@@ -588,6 +624,23 @@ func _draw_units() -> void:
 			draw_circle(q, 6, Color("1b1b1b"))
 			draw_arc(q, 6, 0, TAU, 12, Color("ffd34d"), 2.0)
 			draw_string(font, q + Vector2(-3, 4), _glyph(tg), HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color("ffd34d"))
+
+func _draw_neutral(e) -> void:
+	var k: String = e.t["def"]
+	var col := Color("9a7b3c")
+	match k:
+		"chimaera": col = Color("8a5aa8")
+		"hydra": col = Color("4f8f5a")
+		"gigas": col = Color("7a6a55")
+	if k == "gigas":
+		var r: float = e.radius
+		draw_colored_polygon(PackedVector2Array([e.pos + Vector2(0, -r), e.pos + Vector2(r, 0), e.pos + Vector2(0, r), e.pos + Vector2(-r, 0)]), col)
+		draw_arc(e.pos, r + 6, 0, TAU, 24, Color("ff5a3a"), 3.0)
+	else:
+		draw_circle(e.pos, e.radius, col)
+		draw_arc(e.pos, e.radius + 2, 0, TAU, 24, Color("e7d9a8"), 2.0)
+	draw_string(font, e.pos + Vector2(-26, -e.radius - 18), String(e.label).split(" ")[0], HORIZONTAL_ALIGNMENT_LEFT, 120, 11, Color(1, 1, 1, 0.9))
+	_hpbar(e, e.radius * 2.0)
 
 func _glyph(e) -> String:
 	match e.kind:
@@ -646,6 +699,9 @@ func _draw_minimap() -> void:
 				minimap.draw_rect(Rect2(e.pos * k - Vector2(3, 3), Vector2(6, 6)), COL_T[e.team] if (e.team == player or w.is_visible(player, e)) else Color(COL_T[e.team], 0.4))
 				if e.team == player and w.time - e.last_damaged_at < 2.0:
 					minimap.draw_arc(e.pos * k, 8, 0, TAU, 12, Color.RED, 2.0)
+		elif e.kind == "neutral":
+			if w.is_visible(player, e):
+				minimap.draw_circle(e.pos * k, 3.0 if e.t["gigas"] else 2.0, Color("e2c15a"))
 		elif e.team == player or w.is_visible(player, e):
 			minimap.draw_circle(e.pos * k, 2.5 if e.kind == "glad" else 1.2, COL_T[e.team])
-	minimap.draw_rect(Rect2(cam * k, Vector2(1280, 720) * k), Color.WHITE, false, 1.5)
+	minimap.draw_rect(Rect2(cam * k, _vp() * k), Color.WHITE, false, 1.5)

@@ -95,5 +95,50 @@ func _init() -> void:
 	check(not w3.is_visible(0, enemy_tower), "uzaktaki düşman yapısı sisli")
 	check(w3.seen[0].has(enemy_tower.id), "yapı için son-görülen kayıt var")
 
+	print("== Yaratıklar")
+	var w4 := SimWorld.new(data, 4, [["thraex", "veles"], ["secutor", "murmillo"]])
+	for i in 905: w4.step()
+	var leo = w4.camp_ent(0)
+	check(leo != null, "leo 90. sn'de doğdu")
+	check(w4.camp_ent(4) == null, "hydra 6. dk'dan önce yok")
+	var g0: float = w4.teams[0]["gold"]
+	var tg = w4.teams[0]["glads"][0]
+	tg.pos = leo.pos + Vector2(10, 0)
+	w4.deal(tg, leo, 99999.0, "attack")
+	check(not leo.alive, "leo öldü")
+	check(is_equal_approx(w4.teams[0]["gold"] - g0, 80.0), "leo ödülü 80 altın")
+	check(w4.camp_ent(0) == null and w4.camps[0]["ent"] == -1, "kamp boşaldı")
+	for i in 1210: w4.step()
+	check(w4.camp_ent(0) != null, "leo ~120 sn sonra yeniden doğdu")
+	for i in 2800: w4.step()
+	var hy = w4.camp_ent(4)
+	check(hy != null, "hydra 6. dk'da doğdu")
+	hy.hp = hy.max_hp * 0.5
+	var h1: float = hy.hp
+	for i in 20: w4.step()
+	check(hy.hp > h1, "hydra yenileniyor")
+	hy.status["bleed"] = {"until": w4.time + 5.0, "v": 0.0, "src": -1}
+	var h2: float = hy.hp
+	for i in 20: w4.step()
+	check(is_equal_approx(hy.hp, h2), "kanama hydra yenilenmesini durdurur")
+	var w5 := SimWorld.new(data, 5, [["thraex", "veles"], ["secutor", "murmillo"]])
+	while w5.time < 359.0: w5.step()
+	check(w5.nature_warned, "Gigas uyarısı 20 sn önce")
+	while w5.time < 363.0: w5.step()
+	check(w5.nature_events == 1, "Gigas olayı başladı")
+	var gigs: Array = []
+	for e in w5.ents:
+		if e.kind == "neutral" and e.t["gigas"] and e.alive:
+			gigs.append(e)
+	check(gigs.size() == 4, "4 Gigas (iki köşe × iki taraf)")
+	check(w5.is_visible(0, gigs[0]) and w5.is_visible(1, gigs[0]), "Gigas iki tarafa da her zaman görünür")
+	var tw1 = null
+	for id in w5.teams[0]["towers"]:
+		tw1 = w5.by_id[id]
+	var gb: float = w5.teams[1]["gold"]
+	tw1.hp = 1.0
+	w5.deal(gigs[0], tw1, 9999.0, "attack")
+	check(not tw1.alive and is_equal_approx(w5.teams[1]["gold"], gb), "Gigas'ın yıktığı specula kimseye altın vermez")
+
 	print("\n%s (%d hata)" % ["BAŞARILI" if fails == 0 else "BAŞARISIZ", fails])
 	quit(1 if fails > 0 else 0)

@@ -1,0 +1,19 @@
+{
+  "defs": {
+    "leo":      {"name": "Leo (arena aslanı)", "hp": 600,  "atk": 35, "armor": 15, "aspd": 1.0, "ms": 70, "range": 40, "sight": 260, "radius": 16, "aggro": 200, "leash": 380, "gold": 80,  "favor": 15, "buff": null},
+    "chimaera": {"name": "Chimaera",           "hp": 1500, "atk": 55, "armor": 25, "aspd": 0.9, "ms": 65, "range": 60, "sight": 280, "radius": 22, "aggro": 210, "leash": 400, "gold": 120, "favor": 25,
+                 "buff": {"name": "Ardor", "atk_up": 1.2, "secs": 90.0}},
+    "hydra":    {"name": "Hydra Lernaea",      "hp": 3200, "atk": 70, "armor": 30, "aspd": 0.8, "ms": 55, "range": 70, "sight": 300, "radius": 30, "aggro": 220, "leash": 420, "gold": 150, "favor": 40,
+                 "regen": 0.025, "buff": {"name": "Lerna kanı", "atk_up": 1.15, "armor_up": 20.0, "heal": 0.35, "secs": 120.0}},
+    "gigas":    {"name": "Gigas",              "hp": 5000, "atk": 220, "armor": 35, "aspd": 0.4, "ms": 40, "range": 80, "sight": 300, "radius": 34, "gold": 200, "favor": 30, "splash": 90, "splash_mult": 0.5}
+  },
+  "camps": [
+    {"def": "leo",      "pos": [1750, 1000], "first": 90.0,  "respawn": 120.0},
+    {"def": "leo",      "pos": [650, 600],   "first": 90.0,  "respawn": 120.0},
+    {"def": "chimaera", "pos": [1450, 1050], "first": 180.0, "respawn": 180.0},
+    {"def": "chimaera", "pos": [950, 550],   "first": 180.0, "respawn": 180.0},
+    {"def": "hydra",    "pos": [1200, 800],  "first": 360.0, "respawn": 300.0}
+  ],
+  "nature": {"first": 360.0, "every": 360.0, "warn": 20.0, "max_events": 2, "scale_per_event": 0.25,
+             "corners": [[2100, 200, 0], [300, 1400, 1]]}
+}
